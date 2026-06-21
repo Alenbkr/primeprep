@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',
     'rest_framework',
 
     'apps.users',
@@ -46,6 +48,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -119,5 +122,33 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
+from datetime import timedelta
+import os 
 
 STATIC_URL = 'static/'
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),     # Пропуск живет 15 минут
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),        # Сейф-кука живет 7 дней
+    'ROTATE_REFRESH_TOKENS': True,                     # КРИТИЧЕСКИ ВАЖНО: создавать новый Рефреш при обновлении!
+    'BLACKLIST_AFTER_ROTATION': True,                  # КРИТИЧЕСКИ ВАЖНО: сжигать старый Рефреш (в черный список)!
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+# 6. НАСТРОЙКИ СВЯЗИ С ФРОНТЕНДОМ (CORS)
+# Пока ты разрабатываешь проект на компьютере (локально):
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Адрес твоего фронтенда на React/Vue/Next.js
+    "http://127.0.0.1:3000",
+]
+CORS_ALLOW_CREDENTIALS = True  # ГЛАВНАЯ НАСТРОЙКА: разрешает браузеру отправлять/принимать куки!
+
+# 7. БЕЗОПАСНОСТЬ КУК (ДЛЯ ДЕПЛОЯ/СЕРВЕРА)
+# Пока ты на компьютере (localhost) — оставь False.
+# Когда загрузишь на сервер с HTTPS — ОБЯЗАТЕЛЬНО поменяй оба параметра на True!
+JWT_COOKIE_SECURE = False
+
+AUTH_USER_MODEL = 'users.CustomUser'
