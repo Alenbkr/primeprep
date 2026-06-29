@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from .serializers import RegisterSerializer
+from .serializers import RegisterSerializer, UserProfileSerializer
 
 # Вспомогательная функция, чтобы не дублировать код настройки куки
 def set_refresh_cookie(response, token_string):
@@ -88,7 +88,23 @@ class CookieTokenRefreshView(TokenRefreshView):
         return response
 
 
-# --- 4. ВЫХОД ---
+# --- 4. ПРОФИЛЬ ---
+class ProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserProfileSerializer(request.user)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        serializer = UserProfileSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+
+# --- 5. ВЫХОД ---
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 

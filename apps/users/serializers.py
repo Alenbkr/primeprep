@@ -3,12 +3,12 @@ from rest_framework import serializers
 
 User = get_user_model()
 
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        # Поля твоей модели для фитнеса (добавь свои, если нужно)
         fields = ('username', 'email', 'password', 'weight', 'height')
 
     def create(self, validated_data):
@@ -20,3 +20,10 @@ class RegisterSerializer(serializers.ModelSerializer):
             height=validated_data.get('height', None),
         )
         return user
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'phone', 'weight', 'height')
+        read_only_fields = ('id', 'username')
