@@ -1,12 +1,10 @@
-from django.shortcuts import render
-
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.exceptions import InvalidToken
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from .serializers import RegisterSerializer
 
 # Вспомогательная функция, чтобы не дублировать код настройки куки
@@ -86,5 +84,24 @@ class CookieTokenRefreshView(TokenRefreshView):
             
             # Перезаписываем куку в браузере НОВЫМ Рефреш токеном на следующие 7 дней
             set_refresh_cookie(response, new_refresh_token)
-            
+
+        return response
+
+
+# --- 4. ВЫХОД ---
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        refresh_token = request.COOKIES.get('refresh_token')
+
+        if refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            except TokenError:
+                pass
+
+        response = Response({"detail": "Вы вышли из системы."})
+        response.delete_cookie('refresh_token')
         return response
